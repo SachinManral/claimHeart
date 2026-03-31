@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ClaimHeart-Project Roadmap</title>
+  <style>
+    body {
+      font-family: Georgia, serif;
+      max-width: 860px;
+      margin: 60px auto;
+      padding: 0 30px;
+      background: #fff;
+      color: #111;
+    }
+
+    h1 {
+      font-size: 2.8rem;
+      margin-bottom: 6px;
+    }
+
+    h2 {
+      font-size: 2rem;
+      margin-top: 60px;
+      margin-bottom: 10px;
+      border-bottom: 2px solid #111;
+      padding-bottom: 8px;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      margin-top: 36px;
+      margin-bottom: 8px;
+    }
+
+    p {
+      font-size: 1.2rem;
+      line-height: 1.85;
+      margin-bottom: 20px;
+    }
+
+    .tag {
+      display: inline-block;
+      background: #111;
+      color: #fff;
+      font-size: 0.85rem;
+      padding: 3px 10px;
+      border-radius: 4px;
+      margin-right: 8px;
+      font-family: monospace;
+    }
+
+    .phase {
+      background: #f5f5f5;
+      border-left: 5px solid #111;
+      padding: 20px 24px;
+      margin: 30px 0;
+    }
+
+    .phase p {
+      margin-bottom: 10px;
+    }
+
+    .note {
+      background: #fffbe6;
+      border-left: 5px solid #e6b800;
+      padding: 16px 20px;
+      margin: 24px 0;
+      font-size: 1.1rem;
+      line-height: 1.7;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid #ddd;
+      margin: 50px 0;
+    }
+
+    .subtitle {
+      font-size: 1.2rem;
+      color: #555;
+      margin-bottom: 50px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🏥 ClaimHeart</h1>
+  <p class="subtitle">Complete Project Roadmap - What to Build, In What Order, and Why</p>
+
+  <hr>
+
+  <h2>First - Understand What We Are Building</h2>
+
+  <p>ClaimHeart is not a single app. It is a system made of multiple intelligent agents working together at the same time. Think of it like a team of specialists — one reads documents, one checks policy rules, one looks for fraud, and one talks to the patient. All four work in parallel on the same claim.</p>
+
+  <p>We are building this system for three types of users. Insurance companies, who need to know if a claim is genuine before paying. Patients, who need to know what is happening with their money and why. Hospitals and TPAs, who need a faster and more accurate way to submit claim documents without human errors creeping in.</p>
+
+  <p>The core output of the system is always the same — a clear, explainable decision on every claim, with the reason attached, the policy clause cited, and the fraud risk score visible to whoever needs it.</p>
+
+  <hr>
+
+  <h2>Phase 1 — Set Up Wer Foundation</h2>
+  <p><span class="tag">Week 1</span></p>
+
+  <div class="phase">
+    <h3>What We need to set up first</h3>
+
+    <p>We need a place to store claims. This means a simple database where every claim has an ID, a patient name, a hospital name, a policy number, the documents attached to it, the current status, and the timestamps for every action taken. This is the backbone of everything else.</p>
+
+    <p>We also need a file storage system where scanned PDF documents from hospitals can be uploaded and saved. Every pre-auth form, discharge summary, lab report, and prescription that comes in as a scanned file needs to land somewhere safe before any agent touches it.</p>
+
+    <p>Finally We need a basic API layer — a backend that connects Wer database, Wer file storage, and Wer agents together. When a hospital uploads a document, the API receives it, saves it, and passes it to the extraction agent. That flow needs to work cleanly before anything else.</p>
+  </div>
+
+  <div class="note">
+    At the end of Phase 1 We should be able to upload a PDF and have it saved with a claim ID attached to it. Nothing more. That is the only goal here.
+  </div>
+
+  <hr>
+
+  <h2>Phase 2 — Build the Extractor Agent</h2>
+  <p><span class="tag">Week 1–2</span></p>
+
+  <div class="phase">
+    <h3>What this agent does</h3>
+
+    <p>This is the first agent in Wer pipeline. Its job is to read a scanned PDF — whether it is clean or messy or handwritten — and pull out all the important information in a structured format. Patient name, policy number, diagnosis, treatment type, estimated cost, tests ordered, doctor name, hospital name, past medical history. Everything that a human TPA employee would read manually.</p>
+
+    <p>This agent uses a Vision AI model — meaning an AI that can see images and understand what is written in them. We feed it the scanned PDF page as an image and it returns the structured data. This is how We eliminate human error in the document reading step, which is where most delays and wrong claim entries begin.</p>
+
+    <h3>What We need to create for this agent</h3>
+
+    <p>We need a way to convert incoming PDFs into images so the Vision AI can read them. We need a prompt that tells the AI exactly what fields to look for and what format to return them in. We need a validator that checks whether all required fields were found — and if something is missing, flags it immediately rather than passing an incomplete record downstream.</p>
+
+    <p>We also need to store the extracted data back into the database against the claim ID. So after extraction, the claim record now has structured data attached to it, not just a raw PDF file.</p>
+  </div>
+
+  <div class="note">
+    At the end of Phase 2 We should be able to upload a messy scanned pre-auth form and get back a clean structured record with all fields filled in. That is Wer first real demo moment.
+  </div>
+
+  <hr>
+
+  <h2>Phase 3 — Build the Policy RAG Agent</h2>
+  <p><span class="tag">Week 2</span></p>
+
+  <div class="phase">
+    <h3>What this agent does</h3>
+
+    <p>This agent reads the insurance policy document and finds the exact clause that applies to the current claim. If the claim is for a dengue treatment costing five lakh rupees and the policy has a sub-limit of three lakh for dengue, this agent finds that clause, reads it, and returns it with the page number and section number as a citation. No guessing. No generic answers.</p>
+
+    <p>This is called a RAG system — Retrieval Augmented Generation. It means the AI does not rely on memory or training. It actually goes into the policy PDF, searches for the most relevant section, retrieves it, and then reasons over it to answer whether the claim is covered and to what extent.</p>
+
+    <h3>What We need to create for this agent</h3>
+
+    <p>We need a process to load all Wer insurance policy PDFs into a vector database. This means the policy text is broken into chunks, converted into a mathematical representation the AI can search through, and stored. When a claim comes in, the agent searches that database for the most relevant chunks and reads them.</p>
+
+    <p>We need a set of insurance policy documents to load. For the hackathon We can use publicly available IRDAI-registered policy documents or create synthetic ones. The important thing is that they contain real-sounding sub-limits, disease clauses, waiting period rules, and exclusions.</p>
+
+    <p>We need the agent to output not just a decision but a citation — the exact section, page number, and the relevant sentence from the policy. This is what makes the system glass-box and auditable. Judges can open the policy PDF and verify the AI's reasoning themselves.</p>
+  </div>
+
+  <div class="note">
+    At the end of Phase 3, when a claim comes in, the system should be able to say — this claim is covered up to three lakh rupees as per Section 4.2 Page 7. The judge should be able to open the PDF and see that line themselves.
+  </div>
+
+  <hr>
+
+  <h2>Phase 4 — Build the Fraud Investigator Agent</h2>
+  <p><span class="tag">Week 2–3</span></p>
+
+  <div class="phase">
+    <h3>What this agent does</h3>
+
+    <p>This is the most important agent from the insurance company's perspective. It looks at the claim and asks — does anything here look wrong? Is this patient being admitted for the fifth time this month with the same ID? Is the cost four times the regional average for this procedure? Did this patient buy their policy six months ago but their medical records show a heart condition from two years ago? Is the hospital billing for six tests a day when the policy allows two?</p>
+
+    <p>The agent runs two kinds of checks. The first kind is rule-based — fast, logical, definitive. If the same patient ID appears in four claims within thirty days for the same procedure, that is a rule violation. Flag it immediately. The second kind is AI reasoning — for situations that are ambiguous. A patient spent eight days in hospital for a mild fever. That is not a clear rule violation but it is clinically suspicious. The AI reads the discharge notes and the billing and reasons about whether the hospitalization was genuinely necessary.</p>
+
+    <h3>What We need to create for this agent</h3>
+
+    <p>We need a set of fraud detection rules written out clearly. Duplicate claim detection. Waiting period violation check. Test count comparison against policy protocol limits. Cost comparison against a regional baseline. These rules run first on every single claim automatically.</p>
+
+    <p>We need a regional cost baseline — a reference table that says what the average cost of each common procedure or diagnosis is in each city or region. The agent compares the submitted bill against this baseline. If the bill is three times higher than average, it flags it with the ratio shown clearly.</p>
+
+    <p>We need the AI reasoning layer for ambiguous cases. When a rule is not clearly violated but something still looks off, the agent writes a narrative explanation of what it finds suspicious, why, and what action it recommends — approve, query the hospital, reject, or send a physical agent for verification.</p>
+
+    <p>We need a fraud risk score on every claim — a number from zero to one hundred — so the insurance company dashboard can sort claims by risk and review the most suspicious ones first.</p>
+  </div>
+
+  <div class="note">
+    At the end of Phase 4, every claim that enters the system comes out the other side with a fraud risk score and a list of specific findings with evidence. The insurance company never approves anything blindly again.
+  </div>
+
+  <hr>
+
+  <h2>Phase 5 — Build the TAT Monitor Agent</h2>
+  <p><span class="tag">Week 3</span></p>
+
+  <div class="phase">
+    <h3>What this agent does</h3>
+
+    <p>TAT stands for Turnaround Time. Insurance companies have SLA obligations — initial approval within one hour, discharge approval within three hours. Right now nobody monitors this in real time. Claims sit in queues and nobody knows why until the patient calls and complains.</p>
+
+    <p>This agent runs continuously in the background. It checks every active claim and compares how long it has been waiting against the TAT limit. If a claim is approaching the limit, it sends a warning. If a claim has already breached the limit, it escalates — notifying the right person and logging the reason for the breach.</p>
+
+    <h3>What We need to create for this agent</h3>
+
+    <p>We need a timer attached to every claim at every stage. When the pre-auth form is submitted, the clock starts. When initial approval is issued, that clock stops and the discharge clock starts. Every stage has its own timer.</p>
+
+    <p>We need a bottleneck classifier. When a TAT breach happens, the system should not just say "this claim is late." It should say why. Is it late because the hospital has not uploaded the discharge summary? Is it late because a query was raised and the hospital has not responded? Is it late because a fraud flag sent it into senior review? Each of these is a different cause and requires a different action.</p>
+
+    <p>We need a notification system. When a TAT warning fires, the right stakeholder gets notified — the hospital gets told to upload the missing document, the insurance company gets told a senior reviewer is needed, the patient gets told their claim is being expedited.</p>
+  </div>
+
+  <div class="note">
+    At the end of Phase 5, no claim goes dark. Every stakeholder knows exactly where their case is, how long it has been there, and what needs to happen next.
+  </div>
+
+  <hr>
+
+  <h2>Phase 6 — Build the Mediator Agent</h2>
+  <p><span class="tag">Week 3</span></p>
+
+  <div class="phase">
+    <h3>What this agent does</h3>
+
+    <p>This agent is the voice of the system. It takes every decision — approval, partial approval, rejection, fraud flag, TAT breach — and converts it into a clear, human message for the right audience. For patients it writes in simple everyday language with no jargon. For hospitals it writes formal queries with specific document requirements listed. For insurance companies it writes structured audit-ready reports.</p>
+
+    <p>The most important output is the patient letter. When a claim is denied or partially approved, the patient currently receives a vague letter they cannot understand. ClaimHeart's mediator writes a letter that tells the patient exactly what was approved, exactly what was not approved, exactly why in one or two plain sentences, and exactly what they can do next.</p>
+
+    <h3>What We need to create for this agent</h3>
+
+    <p>We need a set of message templates for different decision types — full approval, partial approval, rejection due to sub-limit, rejection due to fraud, rejection due to waiting period, claim under query, TAT delay. Each template has a different tone and different information to include.</p>
+
+    <p>We need the AI to fill in those templates intelligently using the claim data, the policy citation, and the fraud findings. The output should read like a real person wrote it, not like a form letter was generated.</p>
+
+    <p>We need language support. At minimum English and Hindi for the patient-facing messages. The system should detect the patient's preferred language from their profile and communicate in that language.</p>
+  </div>
+
+  <hr>
+
+  <h2>Phase 7 — Build the Three Dashboards</h2>
+  <p><span class="tag">Week 3–4</span></p>
+
+  <div class="phase">
+    <h3>Patient Dashboard</h3>
+
+    <p>The patient logs in and sees their active claims. Each claim shows a status in plain words — submitted, under review, approved, partially approved, rejected, more documents needed. They can click on any claim and see a full timeline of every action taken, when it happened, and what it means. If their claim was rejected, they see the reason in simple language and the next step they can take. They can upload additional documents if needed.</p>
+
+    <h3>Hospital and TPA Dashboard</h3>
+
+    <p>The hospital TPA staff log in and see all their active cases. They can submit new pre-auth forms by uploading the scanned PDF — the extractor agent handles the reading automatically. They can see which claims have open queries that need a response. They can see TAT countdowns for every active case so they know what is urgent. When the insurance company raises a query, it appears here and the hospital can respond directly in the portal.</p>
+
+    <h3>Insurance Company Dashboard</h3>
+
+    <p>The insurance company sees their full claims queue sorted by fraud risk score. High risk claims are at the top. They can click any claim and see the complete AI analysis — the extracted data, the policy match with citation, the fraud findings with evidence, and the recommended decision. Every piece of reasoning is visible. Nothing is a black box. They can approve, reject, or raise a query with one click. They also see the TAT monitor panel showing any claims approaching or past their SLA limits.</p>
+  </div>
+
+  <hr>
+
+  <h2>Phase 8 — Connect Everything and Test</h2>
+  <p><span class="tag">Week 4</span></p>
+
+  <div class="phase">
+    <p>At this point all four agents and all three dashboards exist separately. Phase 8 is about making them work together as one system. When a hospital uploads a document on their dashboard, the extractor agent fires automatically. When extraction is complete, the policy agent and fraud agent both run in parallel. When both finish, the mediator agent drafts the appropriate communication. All of this happens without anyone pressing a button.</p>
+
+    <p>We need to create five synthetic claim scenarios for testing. One clean genuine claim that gets approved. One claim that exceeds the disease sub-limit and gets partially approved. One duplicate claim that gets flagged as high fraud risk. One claim with a waiting period violation that gets auto-rejected. One claim where the hospital billed excess tests and the fraud agent flags it for query. Run all five through the full pipeline and make sure every output is correct and every dashboard updates in real time.</p>
+  </div>
+
+  <hr>
+
+  <h2>What We Need — Full List</h2>
+
+  <h3>Documents to Prepare</h3>
+
+  <p>We need at least two or three insurance policy PDFs. These can be real publicly available health insurance policy documents from IRDAI-registered companies, or We can create synthetic ones. They must contain sub-limits per disease, waiting period clauses, exclusions, and room rent limits so the Policy Agent has real material to search through.</p>
+
+  <p>We need five synthetic pre-auth form PDFs — one for each of Wer test scenarios. These should look like real hospital forms — patient details, diagnosis, doctor name, estimated costs, tests, signature fields. Scanned slightly crooked or at low resolution to prove the extraction agent can handle real-world quality documents.</p>
+
+  <p>We need a regional cost baseline table — a simple spreadsheet listing common diagnoses and their average treatment cost in Indian cities. Dengue, appendectomy, tympanoplasty, knee replacement, fever. This is what the fraud agent uses to flag cost anomalies.</p>
+
+  <h3>Agents to Build</h3>
+
+  <p>Extractor Agent. Policy RAG Agent. Fraud Investigator Agent. TAT Monitor Agent. Mediator Agent. These are Wer five core components. They are all separate but they all share the same database and pass information to each other through it.</p>
+
+  <h3>Dashboards to Build</h3>
+
+  <p>Patient Dashboard. Hospital and TPA Dashboard. Insurance Company Dashboard. Three separate views, three separate login types, but all reading from the same underlying claim database.</p>
+
+  <h3>Infrastructure to Set Up</h3>
+
+  <p>A database to store claims and all related data. A file storage system for uploaded PDFs. A vector database for the policy RAG. An API layer connecting everything. A background job runner so the TAT monitor can check claim timers every few minutes without anyone triggering it manually.</p>
+
+  <hr>
+
+  <h2>Hackathon Demo Order</h2>
+
+  <p>Start by showing the hospital dashboard. Upload a messy scanned pre-auth PDF. Show the structured data appearing automatically within a few seconds. That is Wer first wow moment — a human would have taken ten minutes to read and type that. The AI did it in four seconds.</p>
+
+  <p>Then switch to the insurance company dashboard. Show the claim appearing with a fraud risk score already attached. Click into the fraud findings. Show the specific evidence — cost four times the regional average, same patient ID used before, excess tests flagged. Show the policy citation — click the link, open the PDF, show the exact line the AI cited. That is Wer second wow moment.</p>
+
+  <p>Then show the patient dashboard. Show the claim status in plain language. Show the patient letter that was auto-generated explaining the decision in simple words with the policy section referenced. That is Wer third wow moment — a patient who previously received a confusing rejection letter now understands exactly what happened and what they can do.</p>
+
+  <p>Finish by showing the TAT monitor — a claim approaching its one-hour initial approval limit, the warning firing, the notification going out. Clean end. Strong close.</p>
+
+  <hr>
+
+  <h2>The Single Most Important Thing</h2>
+
+  <p>Every decision in Wer system must be explainable. The fraud flag must show its evidence. The policy match must show its citation. The rejection letter must say why in plain words. The TAT breach must say what the bottleneck is. If any part of Wer system produces a result that cannot be traced back to a specific piece of data or reasoning, it is a black box and it will not win. Glass-box is the entire point of ClaimHeart. Build every agent with that as the first principle.</p>
+
+  <hr>
+  <p style="color: #888; font-size: 1rem; margin-top: 60px;">ClaimHeart — Capgemini Agentic Hackathon 2026</p>
+
+</body>
+</html>
