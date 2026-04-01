@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -16,7 +16,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-6 backdrop-blur md:px-12">
+      <nav className="fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur sm:px-6 md:px-12">
         <Link href="/" className="flex items-center gap-3">
           <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[var(--ch-blue)]">
             <Heart className="h-4 w-4 fill-white text-white" />
@@ -30,7 +30,7 @@ export default function Navbar() {
           </div>
         </Link>
 
-        <div className="hidden items-center gap-10 md:flex">
+        <div className="hidden items-center gap-8 md:flex">
           {NAV_LINKS.map(({ label, href }) => (
             <Link
               key={label}
@@ -58,7 +58,7 @@ export default function Navbar() {
         </div>
 
         <button
-          className="rounded-lg p-1.5 md:hidden"
+          className="rounded-xl p-2 md:hidden"
           onClick={() => setMobileOpen((value) => !value)}
           aria-label="Toggle menu"
           aria-expanded={mobileOpen}
@@ -67,36 +67,38 @@ export default function Navbar() {
         </button>
       </nav>
 
-      {mobileOpen && (
-        <div className="fixed inset-x-0 top-16 z-40 space-y-1 border-b border-slate-200 bg-white px-6 py-4 shadow-xl">
+      {mobileOpen && <button type="button" className="fixed inset-0 top-16 z-30 bg-slate-950/20 md:hidden" onClick={() => setMobileOpen(false)} aria-label="Close navigation" />}
+
+      <div className={`fixed inset-x-0 top-16 z-40 border-b border-slate-200 bg-white px-4 py-4 shadow-xl transition-transform duration-200 md:hidden ${mobileOpen ? "translate-y-0" : "-translate-y-[120%]"}`}>
+        <div className="space-y-1">
           {NAV_LINKS.map(({ label, href }) => (
             <Link
               key={label}
               href={href}
-              className="block py-2.5 text-sm font-medium text-slate-600 hover:text-slate-900"
+              className="block rounded-xl px-3 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900"
               onClick={() => setMobileOpen(false)}
             >
               {label}
             </Link>
           ))}
-          <div className="space-y-2 pt-2">
-            <Link
-              href="/login"
-              className="block w-full rounded-xl border border-slate-200 py-2.5 text-center text-sm font-medium text-slate-700"
-              onClick={() => setMobileOpen(false)}
-            >
-              Login
-            </Link>
-            <Link
-              href="/dashboard"
-              className="block w-full rounded-xl bg-[var(--ch-blue)] py-2.5 text-center text-sm font-semibold text-white"
-              onClick={() => setMobileOpen(false)}
-            >
-              Get Started
-            </Link>
-          </div>
         </div>
-      )}
+        <div className="space-y-2 pt-3">
+          <Link
+            href="/login"
+            className="block h-10 w-full rounded-xl border border-slate-200 py-2 text-center text-sm font-medium text-slate-700"
+            onClick={() => setMobileOpen(false)}
+          >
+            Login
+          </Link>
+          <Link
+            href="/dashboard"
+            className="block h-10 w-full rounded-xl bg-[var(--ch-blue)] py-2 text-center text-sm font-semibold text-white"
+            onClick={() => setMobileOpen(false)}
+          >
+            Get Started
+          </Link>
+        </div>
+      </div>
     </>
   );
 }
