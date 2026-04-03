@@ -5,9 +5,7 @@ import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   Activity,
-  AlertTriangle,
   ArrowRight,
-  ChevronRight,
   Github,
   Globe,
   Heart,
@@ -23,8 +21,18 @@ import { motion, type Variants } from "framer-motion";
 import Navbar from "@/components/layout/Navbar";
 import { agents, differentiators, faqs, footerLinks, impacts, problems, stats, steps, testimonials, trustedBy } from "@/components/pages/landingContent";
 
-const testimonialLoop = [...testimonials, ...testimonials];
-const trustedLoop = [...trustedBy, ...trustedBy];
+const testimonialLoop = [...testimonials, ...testimonials, ...testimonials];
+const trustedLoop = [...trustedBy, ...trustedBy, ...trustedBy];
+
+const consoleLines = [
+  "> Intake session initialised for pre-auth package",
+  "> OCR scan complete - 5 documents normalised",
+  "> RAG retrieval matched policy clauses 3.2, 5.2, and 6.4",
+  "> Policy agent finished coverage validation",
+  "> Medical agent finished clinical consistency review",
+  "> Cross-validation agent reconciled invoice, labs, and prescription",
+  "> Decision letter generated and queued for registered patient email",
+];
 
 const heroContainer: Variants = {
   hidden: {},
@@ -99,6 +107,17 @@ function CountUp({ value, prefix = "", suffix = "", className = "" }: { value: n
 
 export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [visibleConsoleCount, setVisibleConsoleCount] = useState(3);
+
+  useEffect(() => {
+    let nextCount = 3;
+    const interval = window.setInterval(() => {
+      nextCount = nextCount >= consoleLines.length ? 3 : nextCount + 1;
+      setVisibleConsoleCount(nextCount);
+    }, 1350);
+
+    return () => window.clearInterval(interval);
+  }, []);
 
   return (
     <div className="overflow-x-hidden bg-[var(--ch-surface)] text-[var(--ch-text)]">
@@ -127,20 +146,20 @@ export default function LandingPage() {
           >
             <motion.div variants={heroItem} className="inline-flex items-center gap-2 rounded-full border border-[var(--ch-blue-border)] bg-white/80 px-4 py-2 text-[11px] font-semibold text-[var(--ch-blue-dark)] shadow-[0_12px_30px_rgba(74,142,219,0.08)] backdrop-blur">
               <Activity className="h-3.5 w-3.5 text-[var(--ch-blue)]" />
-              AI-Powered Multi-Agent Claims Orchestration
+              Intelligent Operating System For Healthcare Claims
             </motion.div>
 
             <motion.h1 variants={heroItem} className="mt-6 max-w-[14ch] text-[2.35rem] font-bold leading-[1.04] tracking-[-0.055em] text-slate-900 sm:max-w-[15ch] sm:text-[3rem] lg:max-w-[16ch] lg:text-[4.1rem]">
-              <span className="block">AI That Understands</span>
-              <span className="block text-[var(--ch-blue-dark)]">Insurance Claims Like</span>
-              <span className="mt-2 block text-slate-800">a Doctor, Auditor, and Investigator</span>
+              <span className="block">Transparent claims</span>
+              <span className="block text-[var(--ch-blue-dark)]">operations built for</span>
+              <span className="mt-2 block text-slate-800">speed, trust, and explainable decisions</span>
             </motion.h1>
 
             <motion.p variants={heroItem} className="mt-7 max-w-[38rem] text-sm leading-7 text-[var(--ch-muted)] sm:text-base sm:leading-8 lg:text-lg">
-              ClaimHeart automates claim processing, detects fraud in real-time, and explains every decision with full transparency.
+              ClaimHeart is a healthcare claims intelligence platform for intake, review, policy reasoning, fraud controls, explainable decisions, and stakeholder communication across the full claim lifecycle.
             </motion.p>
             <motion.p variants={heroItem} className="mt-4 text-sm font-medium italic text-[var(--ch-subtle)]">
-              "Smart enough to decide. Human enough to explain why."
+              "Built for healthcare claims teams that need automation without losing control or clarity."
             </motion.p>
 
             <motion.div variants={heroItem} className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
@@ -170,27 +189,27 @@ export default function LandingPage() {
                 <div className="flex gap-1">
                   {[1, 2, 3, 4, 5].map((star) => <Star key={star} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />)}
                 </div>
-                <p className="mt-1 text-xs text-[var(--ch-subtle)]">Trusted by 50+ insurers across India</p>
+                <p className="mt-1 text-xs text-[var(--ch-subtle)]">Designed for insurers, hospitals, TPAs, and patient-facing operations teams</p>
               </div>
             </motion.div>
           </motion.div>
 
           <div className="relative flex w-full flex-1 justify-center lg:justify-end">
             <motion.div
-              className="relative w-full max-w-lg rounded-[1.75rem] border border-white/60 bg-white/70 p-3.5 shadow-[0_24px_72px_rgba(15,23,42,0.14)] backdrop-blur-md sm:p-4"
+              className="relative w-full max-w-xl rounded-[1.75rem] border border-white/60 bg-white/70 p-3.5 shadow-[0_24px_72px_rgba(15,23,42,0.14)] backdrop-blur-md sm:p-4"
               variants={previewItem}
               initial="hidden"
               animate="show"
             >
-              <div className="absolute -right-4 -top-4 hidden rounded-2xl border border-emerald-100 bg-white/90 px-4 py-3 shadow-[0_12px_24px_rgba(15,23,42,0.08)] backdrop-blur md:block">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-600">Live adjudication</p>
-                <p className="mt-1 text-sm font-semibold text-slate-900">Decision confidence: 94%</p>
+              <div className="absolute -right-4 -top-4 hidden rounded-2xl border border-emerald-200 bg-white/90 px-4 py-3 shadow-[0_12px_24px_rgba(15,23,42,0.08)] backdrop-blur md:block">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-600">Workflow synced</p>
+                <p className="mt-1 text-sm font-semibold text-slate-900">Intake, RAG, review, and notification</p>
               </div>
-              <div className="overflow-hidden rounded-[1.35rem] border border-slate-200/80 bg-white">
-                <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-4 py-3.5">
+              <div className="overflow-hidden rounded-[1.35rem] border border-[#143046] bg-[#07111c]">
+                <div className="flex items-center justify-between border-b border-emerald-500/10 bg-[#0d1825] px-4 py-3.5">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--ch-subtle)]">Claim preview</p>
-                    <p className="mt-1 text-sm font-semibold text-slate-900">Transparent review snapshot</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300/80">ClaimHeart live console</p>
+                    <p className="mt-1 text-sm font-semibold text-emerald-100">Operational trace from intake to decision</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
@@ -199,66 +218,41 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                <div className="space-y-4 p-4 sm:p-5">
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3.5">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--ch-subtle)]">Claim ID</p>
-                      <p className="mt-2 text-lg font-bold text-slate-900">CLM-2026-01246</p>
-                    </div>
-                    <div className="rounded-2xl border border-red-100 bg-red-50 p-3.5">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-red-400">Fraud Score</p>
-                      <p className="mt-2 text-lg font-bold text-red-500">0.94</p>
-                    </div>
-                  </div>
-
-                  <div className="rounded-[1.35rem] border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
-                    <div className="flex flex-col gap-3.5 sm:flex-row sm:items-start sm:justify-between">
-                      <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--ch-subtle)]">Patient</p>
-                        <p className="mt-2 text-xl font-bold tracking-[-0.03em] text-slate-900">Priya Sharma</p>
-                        <p className="mt-2 text-sm text-[var(--ch-muted)]">Apollo Hospital Delhi</p>
-                      </div>
-                      <span className="inline-flex w-fit items-center gap-2 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-600">
-                        <AlertTriangle className="h-4 w-4" />
-                        Under review
+                <div className="border-b border-emerald-500/10 bg-[#091523] px-4 py-3">
+                  <div className="flex flex-wrap gap-2">
+                    {['Hospital intake', 'RAG grounding', 'Insurer review', 'Patient update'].map((item) => (
+                      <span key={item} className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold text-emerald-300">
+                        {item}
                       </span>
-                    </div>
-
-                    <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                      <div className="rounded-2xl bg-[var(--ch-blue-light)] p-3.5">
-                        <p className="text-xs font-semibold text-[var(--ch-blue-dark)]">Hospital</p>
-                        <p className="mt-2 text-sm font-semibold text-slate-900">Apollo</p>
-                      </div>
-                      <div className="rounded-2xl bg-green-50 p-3.5">
-                        <p className="text-xs font-semibold text-green-600">Policy</p>
-                        <p className="mt-2 text-sm font-semibold text-slate-900">Clause cited</p>
-                      </div>
-                      <div className="rounded-2xl bg-slate-50 p-3.5">
-                        <p className="text-xs font-semibold text-slate-500">Decision</p>
-                        <p className="mt-2 text-sm font-semibold text-slate-900">Escalated to SIU</p>
-                      </div>
-                    </div>
+                    ))}
                   </div>
+                </div>
 
-                  <div className="rounded-[1.35rem] border border-slate-200 bg-slate-50 p-3.5">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-semibold text-slate-900">Pipeline status</p>
-                      <span className="inline-flex items-center gap-2 text-xs font-medium text-emerald-600">
-                        <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse-dot" />
-                        Live
-                      </span>
-                    </div>
-                    <div className="mt-4 flex flex-wrap items-center gap-2">
-                      {["Extractor", "Policy", "Fraud", "Mediator"].map((item, index) => (
-                        <div key={item} className="flex items-center gap-2">
-                          <div className={`rounded-2xl border px-4 py-2 text-center ${index < 3 ? "border-[var(--ch-blue-border)] bg-white" : "border-slate-200 bg-white/70"}`}>
-                            <span className={`block text-xs font-medium ${index < 3 ? "text-[var(--ch-blue-dark)]" : "text-slate-400"}`}>{item}</span>
-                            <span className={`mx-auto mt-2 block h-2.5 w-2.5 rounded-full ${index < 3 ? "bg-emerald-500" : "bg-slate-300"}`} />
-                          </div>
-                          {index < 3 ? <ChevronRight className="h-4 w-4 text-slate-300" /> : null}
-                        </div>
-                      ))}
-                    </div>
+                <div className="relative min-h-[23rem] overflow-hidden px-4 py-4 font-mono text-[12.5px] leading-7 text-emerald-300 sm:min-h-[24rem] sm:text-[13px]">
+                  <motion.div
+                    aria-hidden="true"
+                    animate={{ y: ['0%', '1200%'] }}
+                    transition={{ duration: 5.5, repeat: Infinity, ease: 'linear' }}
+                    className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400/70 to-transparent"
+                  />
+                  <div className="space-y-2">
+                    {consoleLines.slice(0, visibleConsoleCount).map((line, index) => (
+                      <motion.div
+                        key={`${line}-${index}`}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.22, ease: 'easeOut' }}
+                        className="flex items-start gap-3"
+                      >
+                        <span className="mt-[9px] h-2 w-2 shrink-0 rounded-full bg-emerald-400" />
+                        <span className="text-emerald-200/95">{line}</span>
+                      </motion.div>
+                    ))}
+                    <motion.div
+                      animate={{ opacity: [0.35, 1, 0.35] }}
+                      transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+                      className="inline-flex h-5 w-2 rounded-sm bg-emerald-400/80"
+                    />
                   </div>
                 </div>
               </div>
@@ -271,17 +265,19 @@ export default function LandingPage() {
         <div className="mx-auto max-w-7xl overflow-hidden rounded-full border border-slate-200/80 bg-slate-50/80 px-4 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.04)] backdrop-blur">
           <div className="flex items-center gap-4 whitespace-nowrap text-sm text-slate-600">
             <span className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--ch-subtle)]">Trusted by</span>
-            <motion.div
-              animate={{ x: ["0%", "-50%"] }}
-              transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
-              className="flex min-w-max items-center gap-3"
-            >
-              {trustedLoop.map((name, index) => (
-                <div key={`${name}-${index}`} className="rounded-full border border-slate-200 bg-white px-4 py-2 text-[13px] font-semibold text-slate-600 shadow-[0_2px_10px_rgba(15,23,42,0.04)]">
-                  {name}
-                </div>
-              ))}
-            </motion.div>
+            <div className="min-w-0 flex-1 overflow-hidden">
+              <motion.div
+                animate={{ x: ['0%', '-33.333%'] }}
+                transition={{ repeat: Infinity, duration: 22, ease: 'linear' }}
+                className="flex min-w-max items-center gap-3 pr-3"
+              >
+                {trustedLoop.map((name, index) => (
+                  <div key={`${name}-${index}`} className="rounded-full border border-slate-200 bg-white px-4 py-2 text-[13px] font-semibold text-slate-600 shadow-[0_2px_10px_rgba(15,23,42,0.04)]">
+                    {name}
+                  </div>
+                ))}
+              </motion.div>
+            </div>
           </div>
         </div>
       </section>
@@ -306,8 +302,8 @@ export default function LandingPage() {
         <div className="absolute left-0 top-20 h-48 w-48 rounded-full bg-red-100/40 blur-3xl" />
         <div className="mx-auto max-w-7xl">
           <Reveal className="mx-auto mb-14 max-w-3xl text-center">
-            <h2 className="text-[2rem] font-bold tracking-[-0.03em] text-slate-900 md:text-[2.2rem]">The Healthcare Claims System is Broken</h2>
-            <p className="mt-5 text-base leading-8 text-[var(--ch-muted)] md:text-lg">A broken system costs patients, hospitals, and insurers billions annually and nobody has visibility into why.</p>
+            <h2 className="text-[2rem] font-bold tracking-[-0.03em] text-slate-900 md:text-[2.2rem]">Why Claims Operations Need Reinvention</h2>
+            <p className="mt-5 text-base leading-8 text-[var(--ch-muted)] md:text-lg">Legacy claims workflows are slow, opaque, and fragmented across stakeholders. Modern teams need a system built for speed, control, and explainability.</p>
           </Reveal>
           <div className="grid gap-7 md:grid-cols-2 xl:grid-cols-4">
             {problems.map((card, index) => (
@@ -329,8 +325,8 @@ export default function LandingPage() {
       <section className="bg-white px-4 py-24 sm:px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-7xl">
           <Reveal className="mx-auto mb-14 max-w-3xl text-center">
-            <h2 className="text-[2rem] font-bold tracking-[-0.03em] text-slate-900 md:text-[2.2rem]">Meet ClaimHeart</h2>
-            <p className="mt-5 text-base leading-8 text-[var(--ch-muted)] md:text-lg">Four specialized AI agents working in parallel, each an expert, together unstoppable.</p>
+            <h2 className="text-[2rem] font-bold tracking-[-0.03em] text-slate-900 md:text-[2.2rem]">Platform Architecture</h2>
+            <p className="mt-5 text-base leading-8 text-[var(--ch-muted)] md:text-lg">A modular claims intelligence stack designed to support intake, review, coordination, and explainable decision-making at scale.</p>
           </Reveal>
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
             {agents.map((agent, index) => (
@@ -352,8 +348,8 @@ export default function LandingPage() {
       <section id="how-it-works" className="bg-[linear-gradient(180deg,#eef4fb_0%,#f8fafc_100%)] px-4 py-24 sm:px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-7xl">
           <Reveal className="mx-auto mb-16 max-w-3xl text-center">
-            <h2 className="text-[2rem] font-bold tracking-[-0.03em] text-slate-900 md:text-[2.2rem]">How It Works</h2>
-            <p className="mt-5 text-base leading-8 text-[var(--ch-muted)] md:text-lg">From PDF upload to decision in under 18 seconds.</p>
+            <h2 className="text-[2rem] font-bold tracking-[-0.03em] text-slate-900 md:text-[2.2rem]">Workflow Orchestration</h2>
+            <p className="mt-5 text-base leading-8 text-[var(--ch-muted)] md:text-lg">A connected workflow spanning document intake, evidence grounding, adjudication, escalation, and communication.</p>
           </Reveal>
           <div className="grid gap-6 lg:grid-cols-5">
             {steps.map((step, index) => (
@@ -378,8 +374,8 @@ export default function LandingPage() {
       <section className="bg-white px-4 py-24 sm:px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-7xl">
           <Reveal className="mx-auto mb-14 max-w-3xl text-center">
-            <h2 className="text-[2rem] font-bold tracking-[-0.03em] text-slate-900 md:text-[2.2rem]">Why ClaimHeart Wins</h2>
-            <p className="mt-5 text-base leading-8 text-[var(--ch-muted)] md:text-lg">Built differently - from architecture to audit trail.</p>
+            <h2 className="text-[2rem] font-bold tracking-[-0.03em] text-slate-900 md:text-[2.2rem]">Why Teams Build On ClaimHeart</h2>
+            <p className="mt-5 text-base leading-8 text-[var(--ch-muted)] md:text-lg">Designed as a durable operating layer for healthcare claims, not a point solution for one workflow step.</p>
           </Reveal>
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
             {differentiators.map((item, index) => (
@@ -400,8 +396,8 @@ export default function LandingPage() {
       <section className="bg-[var(--ch-surface)] px-4 py-24 sm:px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-7xl">
           <Reveal className="mx-auto mb-14 max-w-3xl text-center">
-            <h2 className="text-[2rem] font-bold tracking-[-0.03em] text-slate-900 md:text-[2.2rem]">Real-World Impact</h2>
-            <p className="mt-5 text-base leading-8 text-[var(--ch-muted)] md:text-lg">Numbers that matter - from production deployments.</p>
+            <h2 className="text-[2rem] font-bold tracking-[-0.03em] text-slate-900 md:text-[2.2rem]">Operational Outcomes</h2>
+            <p className="mt-5 text-base leading-8 text-[var(--ch-muted)] md:text-lg">Performance improvements that matter across insurers, providers, TPAs, and care operations teams.</p>
           </Reveal>
           <div className="grid gap-6 md:grid-cols-3">
             {impacts.map((item, index) => (
@@ -419,53 +415,33 @@ export default function LandingPage() {
       </section>
       <section className="bg-white px-4 py-24 sm:px-6 md:px-12 lg:px-20">
         <div className="mx-auto max-w-7xl">
-          <Reveal className="mx-auto mb-14 max-w-3xl text-center">
-            <h2 className="text-[2rem] font-bold tracking-[-0.03em] text-slate-900 md:text-[2.2rem]">What Insurers Are Saying</h2>
-            <p className="mt-5 text-base leading-8 text-[var(--ch-muted)] md:text-lg">From TPA desks to C-suite - real voices, real results.</p>
+          <Reveal className="mx-auto mb-12 max-w-3xl text-center">
+            <h2 className="text-[2rem] font-bold tracking-[-0.03em] text-slate-900 md:text-[2.2rem]">What Claims Leaders Are Saying</h2>
+            <p className="mt-4 text-sm leading-7 text-[var(--ch-muted)] md:text-base">Simple, readable feedback from people thinking about claims operations, review quality, and patient communication.</p>
           </Reveal>
 
-          <div className="overflow-hidden lg:hidden">
-            <motion.div
-              animate={{ x: ["0%", "-50%"] }}
-              transition={{ repeat: Infinity, duration: 24, ease: "linear" }}
-              className="flex min-w-max gap-6"
-            >
-              {testimonialLoop.map((t, index) => (
-                <article key={`${t.name}-${index}`} className="w-[20rem] rounded-[1.75rem] border border-slate-200 bg-[var(--ch-surface)] p-7 shadow-[0_8px_30px_rgba(15,23,42,0.04)]">
-                  <div className="mb-4 flex gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => <Star key={star} className="h-4 w-4 fill-amber-400 text-amber-400" />)}
+          <div className="rounded-[1.7rem] border border-slate-200 bg-slate-50/70 p-3 sm:p-4 lg:p-5">
+            <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:gap-4">
+              {testimonials.map((t) => (
+                <article key={t.name} className="flex min-h-[15rem] w-[17.25rem] shrink-0 snap-start flex-col justify-between rounded-[1.35rem] border border-slate-200 bg-white p-5 shadow-[0_4px_14px_rgba(15,23,42,0.04)] sm:w-[18.75rem] lg:w-[19.5rem]">
+                  <div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => <Star key={star} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />)}
+                    </div>
+                    <p className="mt-4 text-[13.5px] leading-6 text-slate-700 sm:text-sm">"{t.text}"</p>
                   </div>
-                  <p className="text-sm italic leading-7 text-[var(--ch-muted)]">"{t.text}"</p>
-                  <div className="mt-6 flex items-center gap-3">
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-full text-xs font-bold text-white ${t.avatarBg}`}>{t.avatar}</div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-800">{t.name}</p>
-                      <p className="text-xs text-[var(--ch-subtle)]">{t.role} - {t.company}</p>
+
+                  <div className="mt-5 flex items-center gap-3 border-t border-slate-100 pt-3.5">
+                    <div className={`flex h-9 w-9 items-center justify-center rounded-full text-[11px] font-bold text-white ${t.avatarBg}`}>{t.avatar}</div>
+                    <div className="min-w-0">
+                      <p className="truncate text-[13px] font-semibold text-slate-900 sm:text-sm">{t.name}</p>
+                      <p className="truncate text-[11px] text-[var(--ch-subtle)]">{t.role}</p>
+                      <p className="truncate text-[11px] text-[var(--ch-muted)]">{t.company}</p>
                     </div>
                   </div>
                 </article>
               ))}
-            </motion.div>
-          </div>
-
-          <div className="hidden gap-6 lg:grid lg:grid-cols-3">
-            {testimonials.map((t, index) => (
-              <Reveal key={t.name} delay={index * 90}>
-                <article className="rounded-[1.75rem] border border-slate-200 bg-[var(--ch-surface)] p-7 shadow-[0_8px_30px_rgba(15,23,42,0.04)] transition-all hover:-translate-y-1">
-                  <div className="mb-4 flex gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => <Star key={star} className="h-4 w-4 fill-amber-400 text-amber-400" />)}
-                  </div>
-                  <p className="text-sm italic leading-7 text-[var(--ch-muted)]">"{t.text}"</p>
-                  <div className="mt-6 flex items-center gap-3">
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-full text-xs font-bold text-white ${t.avatarBg}`}>{t.avatar}</div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-800">{t.name}</p>
-                      <p className="text-xs text-[var(--ch-subtle)]">{t.role} - {t.company}</p>
-                    </div>
-                  </div>
-                </article>
-              </Reveal>
-            ))}
+            </div>
           </div>
         </div>
       </section>
@@ -474,7 +450,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-3xl">
           <Reveal className="mb-14 text-center">
             <h2 className="text-[2rem] font-bold tracking-[-0.03em] text-slate-900 md:text-[2.2rem]">Frequently Asked Questions</h2>
-            <p className="mt-5 text-base leading-8 text-[var(--ch-muted)] md:text-lg">Everything you need to know before getting started.</p>
+            <p className="mt-5 text-base leading-8 text-[var(--ch-muted)] md:text-lg">The core questions teams ask when evaluating a long-term healthcare claims platform.</p>
           </Reveal>
           <div className="space-y-3">
             {faqs.map((faq, index) => (
@@ -499,8 +475,8 @@ export default function LandingPage() {
           <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-3xl bg-white/15 text-white backdrop-blur">
             <Heart className="h-8 w-8 fill-white text-white" />
           </div>
-          <h2 className="text-[2rem] font-bold tracking-[-0.03em] text-white md:text-[2.2rem]">Ready to Transform Healthcare Claims?</h2>
-          <p className="mt-6 text-base leading-7 text-white/80 md:text-lg">Join leading health insurers using ClaimHeart to process faster, detect fraud earlier, and explain every decision transparently.</p>
+          <h2 className="text-[2rem] font-bold tracking-[-0.03em] text-white md:text-[2.2rem]">Ready to Modernize Claims Operations?</h2>
+          <p className="mt-6 text-base leading-7 text-white/80 md:text-lg">Adopt a unified operating layer for intake, review, explainable AI decisions, fraud controls, and patient-facing communication.</p>
           <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row sm:flex-wrap">
             <Link href="/dashboard" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-semibold text-[var(--ch-blue-dark)] shadow-[0_16px_36px_rgba(15,23,42,0.18)] transition-all hover:-translate-y-px hover:shadow-[0_20px_44px_rgba(255,255,255,0.2)]">
               <Play className="h-4 w-4 fill-current" />
