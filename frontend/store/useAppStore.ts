@@ -64,6 +64,11 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   markNotificationRead: (id) => {
+    const alreadyRead = get().notifications.find((notification) => notification.id === id)?.read;
+    if (alreadyRead) {
+      return;
+    }
+
     const updated = get().notifications.map((notification) =>
       notification.id === id ? { ...notification, read: true } : notification,
     );

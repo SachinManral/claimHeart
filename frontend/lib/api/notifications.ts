@@ -74,3 +74,10 @@ export const notifyDocumentUploaded = (claim: { id: string }, fileName: string, 
   const { addNotification } = useAppStore.getState();
   addNotification(makeNotif("insurer", "New document uploaded", `${fileName} added to claim ${claim.id} by ${uploaderRole}. Review when ready.`, "info", claim.id));
 };
+
+export const notifyDecisionEmailSent = (claim: { id: string; patientId: string; patientName: string }, subject: string) => {
+  const { addNotification } = useAppStore.getState();
+
+  addNotification(makeNotif("patient", "Decision email sent", `A formal claim decision email for ${claim.id} has been sent to your registered address.`, "info", claim.id, claim.patientId));
+  addNotification(makeNotif("hospital", "Patient notified", `A decision email titled "${subject}" was sent to ${claim.patientName} for claim ${claim.id}.`, "info", claim.id));
+};

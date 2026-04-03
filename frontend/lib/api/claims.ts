@@ -1,10 +1,35 @@
 ﻿"use client";
 
 import { useAppStore } from "@/store/useAppStore";
-import { notifyClaimSubmitted, notifyDecisionMade, notifyDocumentRequested, notifyDocumentUploaded } from "@/lib/api/notifications";
-import type { Claim, ClaimStatus, Comment, TimelineEntry, UploadedDocument, UserRole } from "@/types";
+import { getDemoCaseById } from "@/lib/demoWorkflow";
+import {
+  notifyClaimSubmitted,
+  notifyDecisionEmailSent,
+  notifyDecisionMade,
+  notifyDocumentRequested,
+  notifyDocumentUploaded,
+} from "@/lib/api/notifications";
+import type { Claim, ClaimEmail, ClaimStatus, Comment, TimelineEntry, UploadedDocument, UserRole } from "@/types";
 
 const buildId = (prefix: string) => `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`;
+
+const collectClaimFlags = (claim: Claim) => [
+  claim.aiResults.policy.status === "flag" ? `Policy review: ${claim.aiResults.policy.reason}` : null,
+  claim.aiResults.medical.status === "flag" ? `Medical review: ${claim.aiResults.medical.reason}` : null,
+  claim.aiResults.cross.status === "flag" ? `Cross-validation: ${claim.aiResults.cross.reason}` : null,
+].filter(Boolean) as string[];
+
+const resolvePatientEmail = (claim: Claim) => {
+  if (claim.patientEmail) {
+    return claim.patientEmail;
+  }
+
+  if (claim.workflowCaseId === "case-1" || claim.workflowCaseId === "case-2" || claim.workflowCaseId === "case-3") {
+    return getDemoCaseById(claim.workflowCaseId).patient.email;
+  }
+
+  return "patient@claimheart.ai";
+};
 
 export const buildNewClaim = (data: Partial<Claim>): Claim => {
   const submittedAt = new Date();
@@ -17,7 +42,7 @@ export const buildNewClaim = (data: Partial<Claim>): Claim => {
     riskScore: Math.floor(Math.random() * 100),
     timeline: [
       { label: "Claim submitted by hospital", time: submittedAt.toISOString(), actor: "hospital" },
-      { label: "AI pipeline processing started", time: processingStartedAt.toISOString(), actor: "system" },
+      { label: "AI review queued", time: processingStartedAt.toISOString(), actor: "system" },
     ],
     aiResults: {
       policy: { status: "pass", reason: "Room rent within daily limit per Section 3.1" },
@@ -26,27 +51,66 @@ export const buildNewClaim = (data: Partial<Claim>): Claim => {
     },
     documents: [],
     comments: [],
+    emails: [],
     caseType: "planned",
     diagnosis: "",
     icdCode: "",
     amount: 0,
     patientId: "",
     patientName: "",
+    patientEmail: "",
     hospital: "",
     ...data,
   } as Claim;
 };
 
 export const buildDecisionLetter = (claim: Claim): string => {
-  const flags = [
-    claim.aiResults.policy.status === "flag" ? `Policy: ${claim.aiResults.policy.reason}` : null,
-    claim.aiResults.medical.status === "flag" ? `Medical: ${claim.aiResults.medical.reason}` : null,
-    claim.aiResults.cross.status === "flag" ? `Validation: ${claim.aiResults.cross.reason}` : null,
-  ]
-    .filter(Boolean)
-    .join("\n");
+  if (claim.decisionLetter) {
+    return claim.decisionLetter;
+  }
+
+  const flags = collectClaimFlags(claim).join("\n");
 
   return `Dear ${claim.patientName},\n\nYour claim ${claim.id} for Rs ${Number(claim.amount).toLocaleString("en-IN")} at ${claim.hospital} has been ${claim.status === "under_review" ? "placed under review" : claim.status}.\n\n${flags ? `Notes:\n${flags}\n\n` : ""}Contact your insurer for queries.\n\nRegards,\nClaimHeart Adjudication System`;
+};
+
+export const buildDecisionEmail = (claim: Claim): ClaimEmail => {
+  const subject =
+    claim.status === "denied"
+      ? `Claim decision for ${claim.id} - Rejected`
+      : claim.status === "under_review"
+        ? `Claim update for ${claim.id} - Manual review`
+        : `Claim decision for ${claim.id}`;
+  const reasons = collectClaimFlags(claim);
+  const sentAt = new Date().toISOString();
+
+  const body = [
+    `Dear ${claim.patientName},`,
+    "",
+    claim.status === "denied"
+      ? `We regret to inform you that claim ${claim.id} has been rejected after insurer review.`
+      : `This is an update regarding claim ${claim.id}.`,
+    "",
+    reasons.length > 0 ? "Reason for the decision:" : "Decision summary:",
+    ...(reasons.length > 0
+      ? reasons.map((reason, index) => `${index + 1}. ${reason}`)
+      : [claim.decisionNote || "Please review the attached decision summary."]),
+    "",
+    "If you would like to challenge this outcome, please reply with any supporting records or continuity documents.",
+    "",
+    "Regards,",
+    "ClaimHeart Adjudication Desk",
+  ].join("\n");
+
+  return {
+    id: buildId("MAIL"),
+    to: resolvePatientEmail(claim),
+    subject,
+    body,
+    sentAt,
+    sentBy: "Insurer Decision Desk",
+    status: "sent",
+  };
 };
 
 export const simulateOCR = () => ({
@@ -109,6 +173,26 @@ export const recordDecision = async (id: string, status: ClaimStatus, note?: str
   const updatedClaim = { ...claim, status, timeline, decisionNote: note };
   notifyDecisionMade(updatedClaim, status, note);
   return updatedClaim;
+};
+
+export const sendDecisionEmail = async (id: string) => {
+  const store = useAppStore.getState();
+  const claim = store.claims.find((entry) => entry.id === id);
+  if (!claim) {
+    return null;
+  }
+
+  const email = buildDecisionEmail(claim);
+  const emails = [email, ...(claim.emails ?? [])];
+  const timeline = [
+    ...claim.timeline,
+    { label: `Decision email sent to registered address ${email.to}`, time: email.sentAt, actor: "insurer" as const },
+  ];
+
+  store.updateClaim(id, { emails, timeline });
+  const updatedClaim = { ...claim, emails, timeline };
+  notifyDecisionEmailSent(updatedClaim, email.subject);
+  return { claim: updatedClaim, email };
 };
 
 export const requestMoreDocuments = async (id: string, requestNote: string) => {

@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  AlertTriangle,
   BarChart3,
+  Bell,
   BookOpen,
   ChevronsLeft,
   ChevronsRight,
@@ -24,6 +24,7 @@ import {
 import type { ReactNode } from "react";
 import { useSyncStore } from "@/hooks/useSyncStore";
 import { getCurrentUser, logout } from "@/lib/api/auth";
+import { getActiveDemoCaseId, getDefaultDemoCaseId, resolveViewerForRole, type DemoCaseId } from "@/lib/demoWorkflow";
 import LiveBadge from "@/components/ui/LiveBadge";
 import NotifBell from "@/components/ui/NotifBell";
 import PageTransition from "@/components/ui/PageTransition";
@@ -33,19 +34,19 @@ const NAV_ITEMS: Record<UserRole, { label: string; href: string; icon: typeof La
   insurer: [
     { label: "Dashboard", href: "/dashboard/insurer", icon: LayoutDashboard },
     { label: "Claims Queue", href: "/claims", icon: FileText },
-    { label: "Notifications", href: "/dashboard/insurer/notifications", icon: AlertTriangle },
+    { label: "Notifications", href: "/dashboard/insurer/notifications", icon: Bell },
     { label: "Policy Library", href: "/policies", icon: BookOpen },
     { label: "Reports", href: "/reports", icon: BarChart3 },
     { label: "Settings", href: "/settings", icon: Settings },
   ],
   hospital: [
     { label: "Dashboard", href: "/dashboard/hospital", icon: LayoutDashboard },
-    { label: "Notifications", href: "/dashboard/hospital/notifications", icon: AlertTriangle },
+    { label: "Notifications", href: "/dashboard/hospital/notifications", icon: Bell },
     { label: "Settings", href: "/settings", icon: Settings },
   ],
   patient: [
     { label: "Dashboard", href: "/dashboard/patient", icon: LayoutDashboard },
-    { label: "Notifications", href: "/dashboard/patient/notifications", icon: AlertTriangle },
+    { label: "Notifications", href: "/dashboard/patient/notifications", icon: Bell },
     { label: "Settings", href: "/settings", icon: Settings },
   ],
 };
@@ -56,12 +57,14 @@ function SidebarContent({
   role,
   user,
   collapsed,
+  activeNavHref,
 }: {
   navItems: { label: string; href: string; icon: typeof LayoutDashboard }[];
   pathname: string;
   role: UserRole;
   user: AppUser | null;
   collapsed: boolean;
+  activeNavHref: string | null;
 }) {
   return (
     <>
@@ -77,7 +80,7 @@ function SidebarContent({
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-5">
         {navItems.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const active = item.href === activeNavHref;
           return (
             <motion.div key={item.href} whileHover={{ x: 2 }} whileTap={{ scale: 0.98 }}>
               <Link
@@ -85,7 +88,7 @@ function SidebarContent({
                 className={`flex items-center rounded-2xl py-3 text-[15px] font-semibold transition-all ${collapsed ? "justify-center px-3" : "gap-3 px-4"} ${active ? "bg-white/18 text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]" : "text-white/72 hover:bg-white/10 hover:text-white"}`}
                 title={collapsed ? item.label : undefined}
               >
-                <item.icon className="h-5 w-5 shrink-0 transition-transform duration-200 group-hover:scale-105" />
+                <item.icon className="h-5 w-5 shrink-0" />
                 <span className={`overflow-hidden whitespace-nowrap transition-all duration-200 ${collapsed ? "w-0 opacity-0" : "w-auto opacity-100"}`}>
                   {item.label}
                 </span>
@@ -95,28 +98,30 @@ function SidebarContent({
         })}
       </nav>
 
-      <div className="space-y-3 border-t border-white/10 p-4">
+      <div className="border-t border-white/10 p-4">
         <div className={`flex items-center rounded-2xl bg-white/10 py-3 ${collapsed ? "justify-center px-2" : "gap-3 px-4"}`}>
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--ch-blue)] text-white">
             <User className="h-4 w-4" />
           </div>
-          <div className={`overflow-hidden transition-all duration-200 ${collapsed ? "w-0 opacity-0" : "w-auto opacity-100"}`}>
-            <p className="whitespace-nowrap text-sm font-semibold text-white">{user?.name ?? "Loading user"}</p>
+          <div className={`min-w-0 overflow-hidden transition-all duration-200 ${collapsed ? "w-0 opacity-0" : "w-auto opacity-100"}`}>
+            <p className="truncate whitespace-nowrap text-sm font-semibold text-white">{user?.name ?? "Loading user"}</p>
             <p className="whitespace-nowrap text-[11px] capitalize text-white/60">{role}</p>
           </div>
+          {!collapsed ? (
+            <motion.button
+              type="button"
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.96 }}
+              onClick={() => logout()}
+              className="ml-auto inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/8 text-white transition-all hover:bg-white/14"
+              title="Logout"
+              aria-label="Logout"
+            >
+              <LogOut className="h-4 w-4" />
+            </motion.button>
+          ) : null}
         </div>
 
-        <motion.button
-          type="button"
-          whileHover={{ scale: 1.01 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => logout()}
-          className={`flex h-11 items-center rounded-2xl border border-white/10 bg-white/8 text-sm font-semibold text-white transition-all hover:bg-white/12 ${collapsed ? "justify-center px-2" : "gap-2 px-4"}`}
-          title={collapsed ? "Logout" : undefined}
-        >
-          <LogOut className="h-4 w-4 shrink-0" />
-          <span className={`overflow-hidden whitespace-nowrap transition-all duration-200 ${collapsed ? "w-0 opacity-0" : "w-auto opacity-100"}`}>Logout</span>
-        </motion.button>
       </div>
     </>
   );
@@ -128,10 +133,20 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<AppUser | null>(null);
-  const role = user?.role ?? "insurer";
+  const [activeCaseId, setActiveCaseId] = useState<DemoCaseId>(getDefaultDemoCaseId());
+
+  const routeRole: UserRole | null = pathname.startsWith("/dashboard/patient")
+    ? "patient"
+    : pathname.startsWith("/dashboard/hospital")
+      ? "hospital"
+      : pathname.startsWith("/dashboard/insurer")
+        ? "insurer"
+        : null;
+  const role = routeRole ?? user?.role ?? "insurer";
 
   useEffect(() => {
     getCurrentUser().then(setUser);
+    setActiveCaseId(getActiveDemoCaseId());
   }, [pathname]);
 
   useEffect(() => {
@@ -139,7 +154,16 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   }, [pathname]);
 
   const navItems = useMemo(() => NAV_ITEMS[role], [role]);
-  const pageTitle = navItems.find((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))?.label ?? "ClaimHeart";
+  const viewer = useMemo(() => resolveViewerForRole(role, user, activeCaseId), [activeCaseId, role, user]);
+  const activeNavHref = useMemo(() => {
+    const matches = navItems.filter((item) => pathname === item.href || pathname.startsWith(`${item.href}/`));
+    if (matches.length === 0) {
+      return null;
+    }
+
+    return matches.sort((left, right) => right.href.length - left.href.length)[0]?.href ?? null;
+  }, [navItems, pathname]);
+  const pageTitle = navItems.find((item) => item.href === activeNavHref)?.label ?? "ClaimHeart";
   const desktopSidebarWidth = collapsed ? "lg:pl-[4.75rem]" : "lg:pl-[17rem]";
   const sidebarWidth = collapsed ? "w-[4.75rem]" : "w-[17rem]";
   const togglePosition = collapsed ? "left-[4.75rem]" : "left-[17rem]";
@@ -187,7 +211,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
             <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-5">
               {navItems.map((item) => {
-                const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                const active = item.href === activeNavHref;
                 return (
                   <motion.div key={`mobile-${item.href}`} whileHover={{ x: 2 }} whileTap={{ scale: 0.98 }}>
                     <Link href={item.href} className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-[15px] font-semibold transition-all ${active ? "bg-white/18 text-white" : "text-white/72 hover:bg-white/10 hover:text-white"}`}>
@@ -199,27 +223,26 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               })}
             </nav>
 
-            <div className="space-y-3 border-t border-white/10 p-4">
+            <div className="border-t border-white/10 p-4">
               <div className="flex items-center gap-3 rounded-2xl bg-white/10 px-4 py-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--ch-blue)] text-white">
                   <User className="h-4 w-4" />
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-white">{user?.name ?? "Loading user"}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-white">{viewer?.name ?? "Loading user"}</p>
                   <p className="text-[11px] capitalize text-white/60">{role}</p>
                 </div>
+                <motion.button type="button" whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }} onClick={() => logout()} className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/8 text-white transition-all hover:bg-white/14" title="Logout" aria-label="Logout">
+                  <LogOut className="h-4 w-4" />
+                </motion.button>
               </div>
-              <motion.button type="button" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} onClick={() => logout()} className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/8 px-4 text-sm font-semibold text-white transition-all hover:bg-white/12">
-                <LogOut className="h-4 w-4" />
-                Logout
-              </motion.button>
             </div>
           </motion.aside>
         ) : null}
       </AnimatePresence>
 
       <aside className={`fixed inset-y-0 left-0 z-50 hidden flex-col bg-[var(--ch-blue-dark)] shadow-[2px_0_16px_rgba(47,111,178,0.16)] transition-[width] duration-200 lg:flex ${sidebarWidth}`}>
-        <SidebarContent navItems={navItems} pathname={pathname} role={role} user={user} collapsed={collapsed} />
+        <SidebarContent navItems={navItems} pathname={pathname} role={role} user={viewer} collapsed={collapsed} activeNavHref={activeNavHref} />
       </aside>
 
       <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }} className={`fixed top-[78px] z-[60] hidden h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-[0_8px_24px_rgba(15,23,42,0.14)] transition-all duration-200 hover:bg-slate-50 lg:flex ${togglePosition}`} onClick={() => setCollapsed((value) => !value)} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
@@ -243,14 +266,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               <span className="text-sm text-slate-400">Search claims, patients...</span>
             </div>
             <div className="hidden sm:block"><LiveBadge /></div>
-            <NotifBell role={role} user={user} />
+            <NotifBell role={role} user={viewer} />
             <Link href={primaryActionHref} className="hidden h-10 items-center rounded-2xl bg-[var(--ch-blue)] px-4 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(74,142,219,0.18)] transition-all hover:opacity-95 sm:flex sm:h-12 sm:px-5">
               {role === "insurer" ? "Open Queue" : role === "hospital" ? "Submit Claim" : "My Claims"}
             </Link>
-            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} type="button" onClick={() => logout()} className="flex h-10 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50 sm:h-12 sm:px-4">
-              <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline">Logout</span>
-            </motion.button>
+
           </div>
         </header>
 

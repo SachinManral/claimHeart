@@ -1,9 +1,24 @@
 ﻿export type ClaimStatus = "pending" | "approved" | "denied" | "under_review";
-export type AgentStatus = "pass" | "flag";
+export type AgentStatus = "pass" | "flag" | "pending";
 export type NotifTarget = "patient" | "hospital" | "insurer" | "all";
 export type UserRole = "patient" | "hospital" | "insurer";
 export type ClaimActor = "hospital" | "insurer" | "patient" | "system";
 export type ClaimCaseType = "planned" | "emergency" | "day_care";
+export type WorkflowAuditLevel = "info" | "success" | "warning";
+
+export interface WorkflowAuditEntry {
+  time: string;
+  label: string;
+  level: WorkflowAuditLevel;
+}
+
+export interface AgentResult {
+  status: AgentStatus;
+  reason: string;
+  confidence?: number;
+  durationMs?: number;
+  highlights?: string[];
+}
 
 export interface TimelineEntry {
   label: string;
@@ -26,12 +41,28 @@ export interface UploadedDocument {
   size: number;
   uploadedAt: string;
   uploadedBy: string;
+  category?: string;
+  previewText?: string;
+  sourceUrl?: string;
+  uploadedFileName?: string;
+  processingStatus?: "queued" | "processing" | "ready";
+}
+
+export interface ClaimEmail {
+  id: string;
+  to: string;
+  subject: string;
+  body: string;
+  sentAt: string;
+  sentBy: string;
+  status: "sent";
 }
 
 export interface Claim {
   id: string;
   patientId: string;
   patientName: string;
+  patientEmail?: string;
   hospital: string;
   caseType: ClaimCaseType;
   diagnosis: string;
@@ -43,11 +74,24 @@ export interface Claim {
   documents: UploadedDocument[];
   timeline: TimelineEntry[];
   aiResults: {
-    policy: { status: AgentStatus; reason: string };
-    medical: { status: AgentStatus; reason: string };
-    cross: { status: AgentStatus; reason: string };
+    policy: AgentResult;
+    medical: AgentResult;
+    cross: AgentResult;
   };
   comments: Comment[];
+  emails?: ClaimEmail[];
+  workflowCaseId?: string;
+  caseLabel?: string;
+  policyNumber?: string;
+  policyStartDate?: string;
+  insurerName?: string;
+  hospitalRegNo?: string;
+  attendingDoctor?: string;
+  decisionLetter?: string;
+  amountApproved?: number;
+  workflowState?: "draft" | "ocr_processing" | "ready_for_submission" | "submitted" | "adjudicating" | "completed";
+  auditTrail?: WorkflowAuditEntry[];
+  pipelineCompletedAt?: string;
   decisionNote?: string;
 }
 
