@@ -1,8 +1,9 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import Link from "next/link";
-import { Activity, Heart, Menu, X } from "lucide-react";
+import { Activity, Menu, X } from "lucide-react";
+import ClaimHeartLogo from "@/components/ui/ClaimHeartLogo";
 
 const NAV_LINKS = [
   { label: "Features", href: "#features" },
@@ -18,8 +19,8 @@ export default function Navbar() {
     <>
       <nav className="fixed inset-x-0 top-0 z-50 flex h-20 items-center justify-between border-b border-slate-200 bg-white/95 px-5 backdrop-blur sm:px-6 md:px-12">
         <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[var(--ch-blue)]">
-            <Heart className="h-5 w-5 fill-white text-white" />
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-[var(--ch-blue-border)] bg-[#e9f2fb] p-0.5">
+            <ClaimHeartLogo className="h-full w-full" imageClassName="scale-110" priority />
           </div>
           <div>
             <p className="text-[1.65rem] font-bold leading-none tracking-[-0.03em] text-slate-800">ClaimHeart</p>

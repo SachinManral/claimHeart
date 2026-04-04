@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -8,7 +8,6 @@ import {
   ArrowRight,
   Github,
   Globe,
-  Heart,
   Linkedin,
   Mail,
   MapPin,
@@ -19,6 +18,7 @@ import {
 } from "lucide-react";
 import { motion, type Variants } from "framer-motion";
 import Navbar from "@/components/layout/Navbar";
+import ClaimHeartLogo from "@/components/ui/ClaimHeartLogo";
 import { agents, differentiators, faqs, footerLinks, impacts, problems, stats, steps, testimonials, trustedBy } from "@/components/pages/landingContent";
 
 const testimonialLoop = [...testimonials, ...testimonials, ...testimonials];
@@ -472,8 +472,8 @@ export default function LandingPage() {
         <div className="absolute left-1/2 top-0 h-56 w-56 -translate-x-1/2 rounded-full bg-white/10 blur-3xl" />
         <div className="absolute bottom-0 right-[10%] h-40 w-40 rounded-full bg-sky-200/20 blur-3xl" />
         <Reveal className="mx-auto max-w-2xl">
-          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-3xl bg-white/15 text-white backdrop-blur">
-            <Heart className="h-8 w-8 fill-white text-white" />
+          <div className="mx-auto mb-6 flex h-[4.25rem] w-[4.25rem] items-center justify-center rounded-3xl bg-[#f7fbff] p-1 backdrop-blur">
+            <ClaimHeartLogo className="h-full w-full" imageClassName="scale-105" />
           </div>
           <h2 className="text-[2rem] font-bold tracking-[-0.03em] text-white md:text-[2.2rem]">Ready to Modernize Claims Operations?</h2>
           <p className="mt-6 text-base leading-7 text-white/80 md:text-lg">Adopt a unified operating layer for intake, review, explainable AI decisions, fraud controls, and patient-facing communication.</p>
@@ -494,8 +494,8 @@ export default function LandingPage() {
           <div className="grid gap-12 border-b border-slate-800 pb-12 md:grid-cols-2 lg:grid-cols-6">
             <div className="lg:col-span-2">
               <div className="mb-4 flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--ch-blue)]">
-                  <Heart className="h-5 w-5 fill-white text-white" />
+                <div className="flex h-[2.375rem] w-[2.375rem] items-center justify-center rounded-xl bg-[#f7fbff] p-0.5">
+                  <ClaimHeartLogo className="h-full w-full" imageClassName="scale-105" />
                 </div>
                 <span className="text-lg font-bold text-white">ClaimHeart</span>
               </div>
@@ -537,7 +537,9 @@ export default function LandingPage() {
 
           <div className="flex flex-col items-center justify-between gap-4 py-6 md:flex-row">
             <div className="flex items-center gap-2">
-              <Heart className="h-4 w-4 fill-[var(--ch-blue)] text-[var(--ch-blue)]" />
+              <div className="flex h-[1.375rem] w-[1.375rem] items-center justify-center rounded-md bg-[#f7fbff] p-0">
+                <ClaimHeartLogo className="h-full w-full" imageClassName="scale-105" />
+              </div>
               <span className="text-sm font-bold text-white">ClaimHeart</span>
               <span className="text-xs text-slate-600">- Smart enough to decide. Human enough to explain why.</span>
             </div>

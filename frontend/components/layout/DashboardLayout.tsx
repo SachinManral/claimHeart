@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -12,7 +12,6 @@ import {
   ChevronsRight,
   ChevronRight,
   FileText,
-  Heart,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -28,6 +27,7 @@ import { getActiveDemoCaseId, getDefaultDemoCaseId, resolveViewerForRole, type D
 import LiveBadge from "@/components/ui/LiveBadge";
 import NotifBell from "@/components/ui/NotifBell";
 import PageTransition from "@/components/ui/PageTransition";
+import ClaimHeartLogo from "@/components/ui/ClaimHeartLogo";
 import type { AppUser, UserRole } from "@/types";
 
 const NAV_ITEMS: Record<UserRole, { label: string; href: string; icon: typeof LayoutDashboard }[]> = {
@@ -69,8 +69,8 @@ function SidebarContent({
   return (
     <>
       <div className={`flex h-[72px] items-center border-b border-white/10 ${collapsed ? "justify-center px-3" : "gap-3 px-5"}`}>
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15">
-          <Heart className="h-4 w-4 fill-white text-white" />
+        <div className="flex h-[2.375rem] w-[2.375rem] items-center justify-center rounded-xl bg-[#f7fbff] p-0.5">
+          <ClaimHeartLogo className="h-full w-full" imageClassName="scale-105" />
         </div>
         <div className={`overflow-hidden transition-all duration-200 ${collapsed ? "w-0 opacity-0" : "w-auto opacity-100"}`}>
           <p className="whitespace-nowrap text-lg font-bold tracking-[-0.03em] text-white">ClaimHeart</p>
@@ -196,8 +196,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           >
             <div className="flex h-[72px] items-center justify-between border-b border-white/10 px-5">
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15">
-                  <Heart className="h-4 w-4 fill-white text-white" />
+                <div className="flex h-[2.375rem] w-[2.375rem] items-center justify-center rounded-xl bg-[#f7fbff] p-0.5">
+          <ClaimHeartLogo className="h-full w-full" imageClassName="scale-105" />
                 </div>
                 <div>
                   <p className="whitespace-nowrap text-lg font-bold tracking-[-0.03em] text-white">ClaimHeart</p>
