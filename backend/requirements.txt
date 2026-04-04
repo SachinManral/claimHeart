@@ -1,3 +1,19 @@
+<<<<<<< HEAD
+# AI & LLM
+google-genai
+python-dotenv
+
+# OCR & Image Processing
+pytesseract
+pdf2image
+opencv-python
+Pillow
+pydantic
+
+# Utilities
+numpy
+requests
+=======
 fastapi
 uvicorn[standard]
 python-multipart
@@ -44,3 +60,4 @@ tqdm
 #url image :
 httpx==0.26.0
 
+>>>>>>> 4da34a8910ab9fabc30671f032a8877e5260e57b
