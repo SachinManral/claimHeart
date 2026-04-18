@@ -1,12 +1,38 @@
-name: CI
+name: dependency-scan
+
 on:
-  push:
-    branches: ["main"]
+  schedule:
+    - cron: '0 3 * * 1'
   pull_request:
-    branches: ["main"]
+  workflow_dispatch:
+
 jobs:
-  build:
+  python-safety:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
     steps:
       - uses: actions/checkout@v4
-      - run: echo "workflow placeholder"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install scanner
+        run: |
+          python -m pip install --upgrade pip
+          pip install safety
+      - name: Safety scan
+        run: safety check -r requirements.txt --full-report || true
+
+  node-audit:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - run: npm audit --audit-level=high || true
