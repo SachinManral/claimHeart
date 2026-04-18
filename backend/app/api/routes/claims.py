@@ -1,0 +1,119 @@
+from datetime import datetime
+from decimal import Decimal
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.orm import Session
+
+from app.api.dependencies import get_current_user, get_db
+from app.core.exceptions import success_response
+from app.db.models.claim import Claim
+from app.db.models.user import User
+from app.schemas.claim_schema import ClaimCreateRequest, ClaimPublic, ClaimStatusUpdateRequest
+
+router = APIRouter()
+
+
+def _serialize_claim(claim: Claim) -> dict:
+    return ClaimPublic(
+        id=claim.id,
+        claim_number=claim.claim_number,
+        patient_name=claim.patient_name,
+        policy_number=claim.policy_number,
+        diagnosis=claim.diagnosis,
+        amount=float(claim.amount if isinstance(claim.amount, Decimal) else claim.amount or 0),
+        status=claim.status,
+        priority=claim.priority,
+        notes=claim.notes,
+        created_by=claim.created_by,
+        created_at=claim.created_at,
+        updated_at=claim.updated_at,
+    ).model_dump()
+
+
+@router.post("")
+def create_claim(
+    payload: ClaimCreateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    claim = Claim(
+        claim_number=payload.claim_number,
+        patient_name=payload.patient_name,
+        policy_number=payload.policy_number,
+        diagnosis=payload.diagnosis,
+        amount=payload.amount,
+        status=payload.status,
+        priority=payload.priority,
+        notes=payload.notes,
+        created_by=current_user.id,
+    )
+    db.add(claim)
+    db.commit()
+    db.refresh(claim)
+    return success_response(_serialize_claim(claim), status_code=201)
+
+
+@router.get("")
+def list_claims(
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+    status_filter: str | None = Query(default=None, alias="status"),
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
+    query = db.query(Claim)
+    if status_filter:
+        query = query.filter(Claim.status == status_filter)
+
+    total = query.count()
+    items = (
+        query.order_by(Claim.created_at.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+    return success_response(
+        [_serialize_claim(claim) for claim in items],
+        meta={"page": page, "page_size": page_size, "total": total},
+    )
+
+
+@router.get("/{claim_id}")
+def get_claim(claim_id: int, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+    claim = db.query(Claim).filter(Claim.id == claim_id).first()
+    if not claim:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Claim not found")
+    return success_response(_serialize_claim(claim))
+
+
+@router.patch("/{claim_id}")
+def update_claim_status(
+    claim_id: int,
+    payload: ClaimStatusUpdateRequest,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
+    claim = db.query(Claim).filter(Claim.id == claim_id).first()
+    if not claim:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Claim not found")
+
+    claim.status = payload.status
+    claim.priority = payload.priority
+    claim.notes = payload.notes
+    claim.updated_at = datetime.utcnow()
+
+    db.add(claim)
+    db.commit()
+    db.refresh(claim)
+    return success_response(_serialize_claim(claim))
+
+
+@router.delete("/{claim_id}")
+def delete_claim(claim_id: int, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+    claim = db.query(Claim).filter(Claim.id == claim_id).first()
+    if not claim:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Claim not found")
+
+    db.delete(claim)
+    db.commit()
+    return success_response({"deleted": True, "claim_id": claim_id})

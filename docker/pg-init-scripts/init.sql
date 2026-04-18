@@ -1,0 +1,55 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  full_name VARCHAR(120) NOT NULL,
+  role VARCHAR(32) NOT NULL DEFAULT 'patient',
+  password_hash VARCHAR(255) NOT NULL,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS claims (
+  id SERIAL PRIMARY KEY,
+  claim_number VARCHAR(32) NOT NULL UNIQUE,
+  patient_name VARCHAR(120) NOT NULL,
+  policy_number VARCHAR(64) NOT NULL,
+  diagnosis VARCHAR(255),
+  amount NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  status VARCHAR(32) NOT NULL DEFAULT 'pending',
+  priority VARCHAR(16) NOT NULL DEFAULT 'normal',
+  notes TEXT,
+  created_by INTEGER REFERENCES users(id),
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS policies (
+  id SERIAL PRIMARY KEY,
+  policy_number VARCHAR(64) NOT NULL UNIQUE,
+  insurer VARCHAR(120) NOT NULL,
+  plan_name VARCHAR(120) NOT NULL,
+  policy_type VARCHAR(32) NOT NULL DEFAULT 'individual',
+  effective_date DATE,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS fraud_flags (
+  id SERIAL PRIMARY KEY,
+  claim_id INTEGER NOT NULL REFERENCES claims(id) ON DELETE CASCADE,
+  score NUMERIC(4, 3) NOT NULL DEFAULT 0,
+  flag_type VARCHAR(64) NOT NULL DEFAULT 'rule',
+  reason TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS letters (
+  id SERIAL PRIMARY KEY,
+  claim_id INTEGER NOT NULL REFERENCES claims(id) ON DELETE CASCADE,
+  recipient_type VARCHAR(32) NOT NULL,
+  language VARCHAR(12) NOT NULL DEFAULT 'en',
+  subject VARCHAR(255) NOT NULL,
+  body TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);

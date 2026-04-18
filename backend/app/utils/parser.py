@@ -65,7 +65,7 @@ def extract_age(text: str) -> Optional[int]:
 def extract_gender(text: str) -> Optional[str]:
     """Extract gender/sex from text"""
     patterns = [
-        r'(?:sex|gender)\s*[:\-]?\s*(male|female|m|f|turnule)',
+        r'(?:sex|gender)\s*[:\-]?\s*(male|female|m|f)',
         r'\b(male|female)\b',
     ]
     
@@ -73,7 +73,7 @@ def extract_gender(text: str) -> Optional[str]:
         match = re.search(pattern, text, re.IGNORECASE)
         if match:
             gender = match.group(1).lower()
-            if 'f' in gender or 'turnule' in gender:
+            if 'f' in gender:
                 return "Female"
             elif 'm' in gender:
                 return "Male"
@@ -310,7 +310,7 @@ def extract_vital_signs(text: str) -> Dict:
         vitals["blood_pressure"] = bp_match.group(1)
     
     # Heart rate/pulse
-    pulse_match = re.search(r'(?:pulse|heart\s*rate|rutu)\s*[:\-]?\s*(\d+)', text, re.IGNORECASE)
+    pulse_match = re.search(r'(?:pulse|heart\s*rate)\s*[:\-]?\s*(\d+)', text, re.IGNORECASE)
     if pulse_match:
         vitals["pulse"] = f"{pulse_match.group(1)} bpm"
     
