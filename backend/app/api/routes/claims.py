@@ -1,10 +1,12 @@
 from datetime import datetime
 from decimal import Decimal
+import random
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_user, get_db
+from app.core.config import settings
 from app.core.exceptions import success_response
 from app.db.models.claim import Claim
 from app.db.models.user import User
@@ -18,9 +20,23 @@ from app.schemas.claim_schema import (
     ClaimStatusUpdateRequest,
 )
 from app.services.claim_service import ClaimService
+from app.utils.s3_helpers import S3Storage, infer_content_type
 
 router = APIRouter()
 service = ClaimService()
+storage = S3Storage()
+
+
+def _generate_claim_number(db: Session) -> str:
+    year = datetime.utcnow().year
+    for _ in range(20):
+        suffix = random.randint(10000, 99999)
+        candidate = f"CLM-{year}-{suffix}"
+        exists = db.query(Claim).filter(Claim.claim_number == candidate).first()
+        if not exists:
+            return candidate
+
+    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unable to generate unique claim number")
 
 
 def _serialize_claim(claim: Claim) -> dict:
@@ -61,6 +77,67 @@ def create_claim(
     db.commit()
     db.refresh(claim)
     return success_response(_serialize_claim(claim), status_code=201)
+
+
+@router.post("/upload")
+async def upload_claim(
+    file: UploadFile = File(...),
+    patient_name: str = Form(...),
+    policy_number: str = Form(...),
+    diagnosis: str | None = Form(default=None),
+    amount: float = Form(default=0),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if not file.filename:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Filename is required")
+
+    payload = await file.read()
+    if len(payload) > settings.max_upload_size_bytes:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File too large (max 10MB)")
+
+    content_type = file.content_type or infer_content_type(file.filename)
+    claim_number = _generate_claim_number(db)
+
+    try:
+        stored = storage.upload_bytes(
+            payload=payload,
+            claim_id=claim_number,
+            filename=file.filename,
+            content_type=content_type,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
+
+    claim = Claim(
+        claim_number=claim_number,
+        patient_name=patient_name.strip(),
+        policy_number=policy_number.strip(),
+        diagnosis=(diagnosis.strip() if diagnosis else None),
+        amount=amount,
+        status="pending",
+        priority="normal",
+        notes=f"Uploaded file: {file.filename}",
+        created_by=current_user.id,
+    )
+    db.add(claim)
+    db.commit()
+    db.refresh(claim)
+
+    return success_response(
+        {
+            "claim": _serialize_claim(claim),
+            "upload": {
+                "filename": file.filename,
+                "content_type": content_type,
+                "storage_key": stored.key,
+                "signed_url": storage.generate_signed_download_url(stored.key),
+            },
+        },
+        status_code=201,
+    )
 
 
 @router.get("")
