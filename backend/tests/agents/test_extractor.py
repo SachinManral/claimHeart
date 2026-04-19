@@ -1,5 +1,11 @@
+import shutil
+
+import pytest
+
 from app.core.ocr_engine import ClaimHeartOCR
 from app.services.extractor_agent import ExtractorAgent
+
+pytestmark = pytest.mark.skipif(shutil.which("tesseract") is None, reason="tesseract is not installed")
 
 def test_claimheart_pipeline(image_path):
     print(f"\n Testing ClaimHeart Intelligent Pipeline")

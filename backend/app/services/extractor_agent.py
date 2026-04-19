@@ -3,10 +3,16 @@ from __future__ import annotations
 import json
 import logging
 import os
+from typing import Any
 
 from dotenv import load_dotenv
-from google import genai
-from google.genai import types
+
+try:
+    from google import genai
+    from google.genai import types
+except Exception:  # pragma: no cover - import availability depends on runtime env
+    genai = None
+    types = None
 
 from app.schemas.bill_schema import BILL_PROMPT
 from app.schemas.claim_schema import CLAIM_SCHEMA
@@ -28,10 +34,13 @@ class ExtractorAgent:
         self.client = None
 
         if self.api_key:
-            try:
-                self.client = genai.Client(api_key=self.api_key)
-            except Exception as exc:
-                logger.warning("Gemini initialization failed; using fallback parser. Details: %s", exc)
+            if genai is None:
+                logger.warning("google-genai package not available; using fallback parser.")
+            else:
+                try:
+                    self.client = genai.Client(api_key=self.api_key)
+                except Exception as exc:
+                    logger.warning("Gemini initialization failed; using fallback parser. Details: %s", exc)
         else:
             logger.warning("No GEMINI/GOOGLE API key found; using fallback parser.")
 
@@ -81,11 +90,14 @@ class ExtractorAgent:
         selected_prompt = prompt_map.get(doc_type, "Extract all important medical entities into JSON.")
 
         try:
-            response = self.client.models.generate_content(
-                model=self.model_id,
-                contents=f"System: You are an expert in {doc_type} analysis. {selected_prompt}\n\nRaw OCR Text:\n{raw_text}",
-                config=types.GenerateContentConfig(response_mime_type="application/json"),
-            )
+            request_kwargs: dict[str, Any] = {
+                "model": self.model_id,
+                "contents": f"System: You are an expert in {doc_type} analysis. {selected_prompt}\n\nRaw OCR Text:\n{raw_text}",
+            }
+            if types is not None:
+                request_kwargs["config"] = types.GenerateContentConfig(response_mime_type="application/json")
+
+            response = self.client.models.generate_content(**request_kwargs)
             if not response.text:
                 return self._fallback(raw_text, "empty_llm_response")
             return response.text

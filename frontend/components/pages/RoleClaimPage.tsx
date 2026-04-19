@@ -12,6 +12,13 @@ import { SkeletonBlock, SkeletonCard } from "@/components/ui/Skeleton";
 import usePageReady from "@/hooks/usePageReady";
 import type { AppUser, UserRole } from "@/types";
 
+const toTimelineActor = (actor: "hospital" | "insurer" | "patient" | "system") => {
+  if (actor === "system") {
+    return "system" as const;
+  }
+  return "human" as const;
+};
+
 export default function RoleClaimPage({ claimId, role }: { claimId: string; role: UserRole }) {
   const claim = useAppStore((state) => state.claims.find((entry) => entry.id === claimId) ?? null);
   const [user, setUser] = useState<AppUser | null>(null);
@@ -84,7 +91,7 @@ export default function RoleClaimPage({ claimId, role }: { claimId: string; role
                   stage: entry.label,
                   status: index === claim.timeline.length - 1 ? "in_progress" : "completed",
                   timestamp: entry.time,
-                  actor: entry.actor,
+                  actor: toTimelineActor(entry.actor),
                   actorName: entry.actor,
                   description: entry.label,
                 }))}
