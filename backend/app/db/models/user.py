@@ -16,3 +16,6 @@ class User(Base):
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
     claims = relationship("Claim", back_populates="creator")
+    assigned_claims = relationship("ClaimAssignment", foreign_keys="ClaimAssignment.assigned_to", back_populates="assignee")
+    comments = relationship("Comment", back_populates="author")
+    templates = relationship("ClaimTemplate", back_populates="creator")

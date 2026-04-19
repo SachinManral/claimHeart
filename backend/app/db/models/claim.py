@@ -24,3 +24,6 @@ class Claim(Base):
     creator = relationship("User", back_populates="claims")
     fraud_flags = relationship("FraudFlag", back_populates="claim", cascade="all, delete-orphan")
     letters = relationship("Letter", back_populates="claim", cascade="all, delete-orphan")
+    assignments = relationship("ClaimAssignment", back_populates="claim", cascade="all, delete-orphan")
+    comments = relationship("Comment", back_populates="claim", cascade="all, delete-orphan")
+    tags = relationship("Tag", secondary="claim_tags", back_populates="claims")

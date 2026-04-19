@@ -89,3 +89,53 @@ class ClaimPublic(BaseModel):
     created_by: int | None
     created_at: datetime
     updated_at: datetime
+
+
+class ClaimBulkApproveRequest(BaseModel):
+    claim_ids: list[int] = Field(min_length=1)
+    decision: str = Field(default="approved")
+    note: str | None = Field(default=None, max_length=500)
+
+    @field_validator("decision")
+    @classmethod
+    def validate_decision(cls, value: str) -> str:
+        normalized = value.strip().lower()
+        if normalized not in {"approved", "denied"}:
+            raise ValueError("decision must be approved or denied")
+        return normalized
+
+
+class ClaimBulkAssignRequest(BaseModel):
+    claim_ids: list[int] = Field(min_length=1)
+    assigned_to: int = Field(gt=0)
+    note: str | None = Field(default=None, max_length=500)
+
+
+class ClaimBulkExportRequest(BaseModel):
+    claim_ids: list[int] = Field(min_length=1)
+    include_notes: bool = True
+
+
+class ClaimBulkStatusUpdateRequest(BaseModel):
+    claim_ids: list[int] = Field(min_length=1)
+    status: str
+    priority: str | None = None
+    note: str | None = Field(default=None, max_length=500)
+
+    @field_validator("status")
+    @classmethod
+    def validate_bulk_status(cls, value: str) -> str:
+        normalized = value.strip().lower()
+        if normalized not in ALLOWED_CLAIM_STATUS:
+            raise ValueError(f"status must be one of {sorted(ALLOWED_CLAIM_STATUS)}")
+        return normalized
+
+    @field_validator("priority")
+    @classmethod
+    def validate_bulk_priority(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        normalized = value.strip().lower()
+        if normalized not in ALLOWED_PRIORITY:
+            raise ValueError(f"priority must be one of {sorted(ALLOWED_PRIORITY)}")
+        return normalized

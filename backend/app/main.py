@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import claims, documents, health, ocr, policies, users
+from app.api.routes import assignments, claims, comments, documents, health, ocr, policies, tags, templates, users
 from app.core.config import settings
 from app.core.exceptions import setup_exception_handlers, success_response
 from app.db.base_class import Base
@@ -33,6 +33,10 @@ app.include_router(health.router, prefix="/api", tags=["Health"])
 app.include_router(ocr.router, prefix="/api/ocr", tags=["OCR"])
 app.include_router(users.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(claims.router, prefix="/api/claims", tags=["Claims"])
+app.include_router(assignments.router, prefix="/api/assignments", tags=["Assignments"])
+app.include_router(comments.router, prefix="/api/comments", tags=["Comments"])
+app.include_router(tags.router, prefix="/api/tags", tags=["Tags"])
+app.include_router(templates.router, prefix="/api/templates", tags=["Templates"])
 app.include_router(documents.router, prefix="/api", tags=["Documents"])
 app.include_router(policies.router, prefix="/api/policies", tags=["Policies"])
 

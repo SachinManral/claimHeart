@@ -195,6 +195,24 @@ Project documents are available in the `docs/` folder, including:
 - `hipaa-compliance.md`
 - `workflow.md`
 
+## GitHub Issue Automation
+
+Issue markdown files for bulk creation are stored in `.github/issues/`.
+
+1. Set `GITHUB_TOKEN` with issue write permissions.
+2. Add or edit issue markdown files in `.github/issues/`.
+3. Run the script:
+
+```bash
+python3 .github/scripts/create_issues.py
+```
+
+To validate parsing without creating issues:
+
+```bash
+python3 .github/scripts/create_issues.py --dry-run
+```
+
 ## Why This Project Matters
 
 ClaimHeart is not just a UI demo or a single OCR script. It is structured as a healthcare claims platform that can grow into a complete adjudication system with explainable AI support, role-aware operations, and a stronger audit trail for real-world insurance workflows.

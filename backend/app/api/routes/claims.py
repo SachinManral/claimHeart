@@ -8,9 +8,19 @@ from app.api.dependencies import get_current_user, get_db
 from app.core.exceptions import success_response
 from app.db.models.claim import Claim
 from app.db.models.user import User
-from app.schemas.claim_schema import ClaimCreateRequest, ClaimPublic, ClaimStatusUpdateRequest
+from app.schemas.claim_schema import (
+    ClaimBulkApproveRequest,
+    ClaimBulkAssignRequest,
+    ClaimBulkExportRequest,
+    ClaimBulkStatusUpdateRequest,
+    ClaimCreateRequest,
+    ClaimPublic,
+    ClaimStatusUpdateRequest,
+)
+from app.services.claim_service import ClaimService
 
 router = APIRouter()
+service = ClaimService()
 
 
 def _serialize_claim(claim: Claim) -> dict:
@@ -76,6 +86,83 @@ def list_claims(
         [_serialize_claim(claim) for claim in items],
         meta={"page": page, "page_size": page_size, "total": total},
     )
+
+
+@router.post("/bulk/approve")
+def bulk_approve_claims(
+    payload: ClaimBulkApproveRequest,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
+    try:
+        result = service.bulk_approve(
+            db=db,
+            claim_ids=payload.claim_ids,
+            decision=payload.decision,
+            note=payload.note,
+        )
+        return success_response(result)
+    except ValueError as exc:
+        message = str(exc)
+        code = status.HTTP_404_NOT_FOUND if "not found" in message.lower() else status.HTTP_400_BAD_REQUEST
+        raise HTTPException(status_code=code, detail=message) from exc
+
+
+@router.post("/bulk/assign")
+def bulk_assign_claims(
+    payload: ClaimBulkAssignRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    try:
+        result = service.bulk_assign(
+            db=db,
+            claim_ids=payload.claim_ids,
+            assigned_to=payload.assigned_to,
+            assigned_by=current_user.id,
+            note=payload.note,
+        )
+        return success_response(result)
+    except ValueError as exc:
+        message = str(exc)
+        code = status.HTTP_404_NOT_FOUND if "not found" in message.lower() else status.HTTP_400_BAD_REQUEST
+        raise HTTPException(status_code=code, detail=message) from exc
+
+
+@router.post("/bulk/export")
+def bulk_export_claims(
+    payload: ClaimBulkExportRequest,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
+    try:
+        result = service.bulk_export(db=db, claim_ids=payload.claim_ids, include_notes=payload.include_notes)
+        return success_response(result)
+    except ValueError as exc:
+        message = str(exc)
+        code = status.HTTP_404_NOT_FOUND if "not found" in message.lower() else status.HTTP_400_BAD_REQUEST
+        raise HTTPException(status_code=code, detail=message) from exc
+
+
+@router.post("/bulk/update-status")
+def bulk_update_claim_status(
+    payload: ClaimBulkStatusUpdateRequest,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
+    try:
+        result = service.bulk_update_status(
+            db=db,
+            claim_ids=payload.claim_ids,
+            status=payload.status,
+            priority=payload.priority,
+            note=payload.note,
+        )
+        return success_response(result)
+    except ValueError as exc:
+        message = str(exc)
+        code = status.HTTP_404_NOT_FOUND if "not found" in message.lower() else status.HTTP_400_BAD_REQUEST
+        raise HTTPException(status_code=code, detail=message) from exc
 
 
 @router.get("/{claim_id}")
